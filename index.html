@@ -393,6 +393,19 @@
       color: var(--text);
     }
 
+
+    .settings-links { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); display: grid; gap: 6px; }
+    .settings-link { width: 100%; border: 0; background: transparent; padding: 9px 6px; text-align: left; font: inherit; font-weight: 750; color: var(--text); cursor: pointer; border-radius: 8px; }
+    .settings-link:hover { background: #f1f2f3; }
+    .info-modal { text-align: left; }
+    .info-modal h2 { text-align: center; }
+    .info-modal p { font-size: 16px; font-weight: 500; line-height: 1.5; margin: 0 0 12px; }
+    .info-modal .disclaimer { color: var(--muted); font-size: 13px; font-style: italic; }
+    .parent-math { margin: 16px 0; padding: 14px; background: #f5f6f7; border-radius: 12px; text-align: center; }
+    .parent-math label { display: block; font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+    .parent-answer { width: 110px; max-width: 100%; padding: 9px 10px; border: 2px solid var(--border); border-radius: 9px; font-size: 20px; text-align: center; }
+    .parent-error { min-height: 20px; margin-top: 7px; color: #a33; font-size: 13px; font-weight: 700; }
+
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -678,6 +691,10 @@
       </div>
       <div class="mode-explainer" id="modeExplainer">Guesses must be real words.</div>
     </section>
+      <div class="settings-links">
+        <button class="settings-link" id="aboutBtn">About Learn To Readle</button>
+        <button class="settings-link" id="grownUpsBtn">For Parents &amp; Grown-Ups</button>
+      </div>
     </div>
 
     <section class="progress-panel" id="progressPanel" aria-label="Reading progress">
@@ -727,6 +744,36 @@
     </div>
 
 
+
+    <div class="modal-backdrop" id="aboutModal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+      <div class="result-modal info-modal">
+        <h2 id="aboutTitle">About Learn To Readle</h2>
+        <p>Learn To Readle is a free word game designed for kids who are learning to spell.</p>
+        <p>I originally built it for my five-year-old son, who loved helping with Wordle but wanted to play more than once a day. Learn To Readle lets kids play as many games as they want, choose words from 3 to 8 letters long, and ask for hints when they need a little help.</p>
+        <p>The goal is simple: make practicing spelling and working with words feel like a game.</p>
+        <p>Learn To Readle is free to use and doesn't require an account.</p>
+        <p class="disclaimer">Learn To Readle is an independent project and is not affiliated with Wordle or The New York Times.</p>
+        <div class="confirm-buttons"><button class="modal-button" id="aboutCloseBtn">CLOSE</button></div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="grownUpsModal" role="dialog" aria-modal="true" aria-labelledby="grownUpsTitle">
+      <div class="result-modal info-modal">
+        <h2 id="grownUpsTitle">For Parents &amp; Grown-Ups</h2>
+        <p>Learn To Readle is completely free. If your family enjoys it and you'd like to help me keep improving it, you can make an optional contribution.</p>
+        <p>Payment is handled securely by Venmo. Learn To Readle never receives or stores your payment information.</p>
+        <div class="parent-math">
+          <label for="parentAnswer">To continue to Venmo, please solve:<br><span id="parentProblem"></span></label>
+          <input class="parent-answer" id="parentAnswer" type="number" inputmode="numeric" autocomplete="off">
+          <div class="parent-error" id="parentError" aria-live="polite"></div>
+        </div>
+        <div class="confirm-buttons">
+          <button class="modal-button confirm-no" id="grownUpsCancelBtn">CANCEL</button>
+          <button class="modal-button" id="grownUpsContinueBtn">CONTINUE TO VENMO</button>
+        </div>
+      </div>
+    </div>
+
     <div class="modal-backdrop" id="resetModal" role="dialog" aria-modal="true" aria-labelledby="resetTitle">
       <div class="result-modal">
         <h2 id="resetTitle">Reset progress?</h2>
@@ -765,6 +812,8 @@
     const MAX_GUESSES = 8;
     const PROGRESS_STORAGE_KEY = "learnToReadleProgress";
     const PROGRESS_SCHEMA_VERSION = 1;
+    // Paste your Venmo URL here before enabling contributions.
+    const VENMO_SUPPORT_URL = "PASTE_YOUR_VENMO_LINK_HERE";
 
     // These are the words the game can choose as the answer.
     // Keep these familiar and kid-friendly.
@@ -789,6 +838,8 @@
     let gameMode = "easy";
     let isAnimating = false;
     let progressState = null;
+    let parentGateAnswer = null;
+    let parentGateAttempts = 0;
 
     const board = document.getElementById("board");
     const keyboard = document.getElementById("keyboard");
@@ -812,6 +863,16 @@
     const resetModal = document.getElementById("resetModal");
     const resetYesBtn = document.getElementById("resetYesBtn");
     const resetNoBtn = document.getElementById("resetNoBtn");
+    const aboutBtn = document.getElementById("aboutBtn");
+    const aboutModal = document.getElementById("aboutModal");
+    const aboutCloseBtn = document.getElementById("aboutCloseBtn");
+    const grownUpsBtn = document.getElementById("grownUpsBtn");
+    const grownUpsModal = document.getElementById("grownUpsModal");
+    const grownUpsCancelBtn = document.getElementById("grownUpsCancelBtn");
+    const grownUpsContinueBtn = document.getElementById("grownUpsContinueBtn");
+    const parentProblem = document.getElementById("parentProblem");
+    const parentAnswer = document.getElementById("parentAnswer");
+    const parentError = document.getElementById("parentError");
 
 
     function setGameMode(mode) {
@@ -1001,6 +1062,43 @@
         saveProgressState();
         renderProgress();
       }
+    }
+
+    function newParentGateProblem() {
+      const a = Math.floor(Math.random() * 31) + 20;
+      const b = Math.floor(Math.random() * 31) + 11;
+      parentGateAnswer = a + b;
+      parentGateAttempts = 0;
+      parentProblem.textContent = `${a} + ${b} = ?`;
+      parentAnswer.value = "";
+      parentError.textContent = "";
+    }
+
+    function openParentGate() {
+      newParentGateProblem();
+      grownUpsModal.classList.add("show");
+      setTimeout(() => parentAnswer.focus(), 50);
+    }
+
+    function tryParentGate() {
+      const entered = Number(parentAnswer.value);
+      if (!parentAnswer.value.trim() || !Number.isFinite(entered) || entered !== parentGateAnswer) {
+        parentGateAttempts++;
+        parentError.textContent = "That answer isn't correct.";
+        parentAnswer.value = "";
+        if (parentGateAttempts >= 3) {
+          newParentGateProblem();
+          parentError.textContent = "Try this new problem.";
+        }
+        parentAnswer.focus();
+        return;
+      }
+      if (!VENMO_SUPPORT_URL || VENMO_SUPPORT_URL === "PASTE_YOUR_VENMO_LINK_HERE") {
+        parentError.textContent = "The Venmo link hasn't been added yet.";
+        return;
+      }
+      grownUpsModal.classList.remove("show");
+      window.location.href = VENMO_SUPPORT_URL;
     }
 
     function resetAllProgress() {
@@ -1523,6 +1621,27 @@
     document.getElementById("newGameBtn").onclick = () => startGame();
     document.getElementById("newGameBtn2").onclick = () => startGame();
     hintBtn.onclick = giveHint;
+
+    aboutBtn.onclick = () => {
+      settingsPanel.classList.remove("show");
+      settingsBtn.setAttribute("aria-expanded", "false");
+      aboutModal.classList.add("show");
+    };
+    aboutCloseBtn.onclick = () => aboutModal.classList.remove("show");
+    grownUpsBtn.onclick = () => {
+      settingsPanel.classList.remove("show");
+      settingsBtn.setAttribute("aria-expanded", "false");
+      openParentGate();
+    };
+    grownUpsCancelBtn.onclick = () => {
+      grownUpsModal.classList.remove("show");
+      parentAnswer.value = "";
+      parentError.textContent = "";
+    };
+    grownUpsContinueBtn.onclick = tryParentGate;
+    parentAnswer.addEventListener("keydown", event => {
+      if (event.key === "Enter") { event.preventDefault(); tryParentGate(); }
+    });
 
     resetProgressBtn.onclick = () => {
       resetModal.classList.add("show");
