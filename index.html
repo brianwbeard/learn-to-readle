@@ -813,7 +813,7 @@
     const PROGRESS_STORAGE_KEY = "learnToReadleProgress";
     const PROGRESS_SCHEMA_VERSION = 1;
     // Paste your Venmo URL here before enabling contributions.
-    const VENMO_SUPPORT_URL = "https://venmo.com/u/brianwbeard";
+    const VENMO_SUPPORT_URL = "PASTE_YOUR_VENMO_LINK_HERE";
 
     // These are the words the game can choose as the answer.
     // Keep these familiar and kid-friendly.
@@ -1607,6 +1607,11 @@
     }
 
     document.addEventListener("keydown", (event) => {
+      const target = event.target;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+        return;
+      }
+
       if (event.key === "Enter") {
         event.preventDefault();
         submitGuess();
