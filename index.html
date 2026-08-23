@@ -365,6 +365,34 @@
       text-transform: uppercase;
     }
 
+
+    .reset-progress-wrap {
+      margin-top: 14px;
+      text-align: center;
+    }
+
+    .reset-progress-btn {
+      background: transparent;
+      color: #a33;
+      border: 1px solid #d8b0b0;
+      border-radius: 9px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .confirm-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .confirm-no {
+      background: #e6e7e9;
+      color: var(--text);
+    }
+
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -660,6 +688,9 @@
         <span>Total</span>
         <span id="progressTotal">0 / 0</span>
       </div>
+      <div class="reset-progress-wrap">
+        <button class="reset-progress-btn" id="resetProgressBtn">RESET</button>
+      </div>
     </section>
 
     <div id="message" aria-live="polite"></div>
@@ -692,6 +723,18 @@
         <h2 id="lossTitle">Better luck next time!</h2>
         <p>The word was <span class="result-word" id="lossWord"></span>.</p>
         <button class="modal-button" id="tryAgainBtn">Try Another Word</button>
+      </div>
+    </div>
+
+
+    <div class="modal-backdrop" id="resetModal" role="dialog" aria-modal="true" aria-labelledby="resetTitle">
+      <div class="result-modal">
+        <h2 id="resetTitle">Reset progress?</h2>
+        <p>Are you sure you want to reset all progress?</p>
+        <div class="confirm-buttons">
+          <button class="modal-button confirm-no" id="resetNoBtn">NO</button>
+          <button class="modal-button" id="resetYesBtn">YES</button>
+        </div>
       </div>
     </div>
 
@@ -765,6 +808,10 @@
     const progressPanel = document.getElementById("progressPanel");
     const progressList = document.getElementById("progressList");
     const progressTotal = document.getElementById("progressTotal");
+    const resetProgressBtn = document.getElementById("resetProgressBtn");
+    const resetModal = document.getElementById("resetModal");
+    const resetYesBtn = document.getElementById("resetYesBtn");
+    const resetNoBtn = document.getElementById("resetNoBtn");
 
 
     function setGameMode(mode) {
@@ -956,6 +1003,12 @@
       }
     }
 
+    function resetAllProgress() {
+      progressState = emptyProgressState();
+      saveProgressState();
+      renderProgress();
+    }
+
     function renderProgress() {
       reconcileProgressState();
 
@@ -1135,6 +1188,11 @@
       }
 
       const guess = currentGuess.toUpperCase();
+
+      if (guesses.includes(guess)) {
+        showMessage("You already guessed that word.");
+        return;
+      }
 
       if (!/^[A-Z]+$/.test(guess)) {
         showMessage("Use letters only.");
@@ -1465,6 +1523,20 @@
     document.getElementById("newGameBtn").onclick = () => startGame();
     document.getElementById("newGameBtn2").onclick = () => startGame();
     hintBtn.onclick = giveHint;
+
+    resetProgressBtn.onclick = () => {
+      resetModal.classList.add("show");
+    };
+
+    resetNoBtn.onclick = () => {
+      resetModal.classList.remove("show");
+    };
+
+    resetYesBtn.onclick = () => {
+      resetAllProgress();
+      resetModal.classList.remove("show");
+      showMessage("Progress reset.");
+    };
 
     settingsBtn.onclick = () => {
       const willOpen = !settingsPanel.classList.contains("show");
