@@ -484,6 +484,95 @@
       }
     }
 
+
+    .progress-panel {
+      display: none;
+      background: var(--panel);
+      border: 1px solid #e0e2e5;
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .progress-panel.show {
+      display: block;
+    }
+
+    .progress-panel h2 {
+      margin: 0 0 4px;
+      font-size: 18px;
+      text-align: center;
+    }
+
+    .progress-subtitle {
+      margin: 0 0 12px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .progress-list {
+      display: grid;
+      gap: 6px;
+    }
+
+    .progress-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 7px 8px;
+      border-radius: 8px;
+    }
+
+    .progress-row:nth-child(odd) {
+      background: #f5f6f7;
+    }
+
+    .progress-label {
+      font-weight: 700;
+    }
+
+    .progress-count {
+      font-variant-numeric: tabular-nums;
+      font-weight: 800;
+    }
+
+    .progress-total {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    @media (max-width: 430px) {
+      header {
+        gap: 8px;
+      }
+
+      .top-buttons {
+        gap: 5px;
+        flex-wrap: nowrap;
+      }
+
+      .gear-btn {
+        width: 38px;
+        height: 38px;
+        font-size: 20px;
+        flex: 0 0 38px;
+      }
+
+      .small-btn {
+        padding: 9px 10px;
+        font-size: 14px;
+        white-space: nowrap;
+      }
+    }
+
     @media (max-width: 430px) {
       .app { padding-left: 8px; padding-right: 8px; }
   
@@ -541,6 +630,7 @@
     <header>
       <h1>Learn To Readle</h1>
       <div class="top-buttons">
+        <button class="gear-btn" id="progressBtn" aria-label="Progress" aria-expanded="false">📊</button>
         <button class="gear-btn" id="settingsBtn" aria-label="Settings" aria-expanded="false">⚙️</button>
         <button class="small-btn" id="newGameBtn">New Word</button>
       </div>
@@ -561,6 +651,16 @@
       <div class="mode-explainer" id="modeExplainer">Guesses must be real words.</div>
     </section>
     </div>
+
+    <section class="progress-panel" id="progressPanel" aria-label="Reading progress">
+      <h2>Your Progress</h2>
+      <p class="progress-subtitle">Unique words solved</p>
+      <div class="progress-list" id="progressList"></div>
+      <div class="progress-total">
+        <span>Total</span>
+        <span id="progressTotal">0 / 0</span>
+      </div>
+    </section>
 
     <div id="message" aria-live="polite"></div>
 
@@ -620,6 +720,8 @@
 
     const DEFAULT_LENGTH = 5;
     const MAX_GUESSES = 8;
+    const PROGRESS_STORAGE_KEY = "learnToReadleProgress";
+    const PROGRESS_SCHEMA_VERSION = 1;
 
     // These are the words the game can choose as the answer.
     // Keep these familiar and kid-friendly.
@@ -643,6 +745,7 @@
     let hintedLocations = new Set();
     let gameMode = "easy";
     let isAnimating = false;
+    let progressState = null;
 
     const board = document.getElementById("board");
     const keyboard = document.getElementById("keyboard");
@@ -658,6 +761,10 @@
     const modeExplainer = document.getElementById("modeExplainer");
     const settingsBtn = document.getElementById("settingsBtn");
     const settingsPanel = document.getElementById("settingsPanel");
+    const progressBtn = document.getElementById("progressBtn");
+    const progressPanel = document.getElementById("progressPanel");
+    const progressList = document.getElementById("progressList");
+    const progressTotal = document.getElementById("progressTotal");
 
 
     function setGameMode(mode) {
@@ -752,9 +859,158 @@
       return null;
     }
 
+
+    function emptyProgressState() {
+      const state = {
+        version: PROGRESS_SCHEMA_VERSION,
+        seen: {},
+        solved: {}
+      };
+
+      for (let len = 3; len <= 8; len++) {
+        state.seen[len] = [];
+        state.solved[len] = [];
+      }
+
+      return state;
+    }
+
+    function normalizeWordList(words) {
+      if (!Array.isArray(words)) return [];
+      return [...new Set(
+        words
+          .filter(word => typeof word === "string")
+          .map(word => word.toUpperCase())
+      )];
+    }
+
+    function loadProgressState() {
+      let stored = null;
+
+      try {
+        stored = JSON.parse(localStorage.getItem(PROGRESS_STORAGE_KEY));
+      } catch (err) {
+        console.warn("Could not read saved progress:", err);
+      }
+
+      // Version 1 is deliberately simple. If storage changes in a future
+      // release, this is the migration point.
+      if (!stored || stored.version !== PROGRESS_SCHEMA_VERSION) {
+        progressState = emptyProgressState();
+      } else {
+        progressState = {
+          version: PROGRESS_SCHEMA_VERSION,
+          seen: stored.seen || {},
+          solved: stored.solved || {}
+        };
+      }
+
+      reconcileProgressState();
+      saveProgressState();
+    }
+
+    function reconcileProgressState() {
+      if (!progressState) progressState = emptyProgressState();
+
+      for (let len = 3; len <= 8; len++) {
+        const currentAnswers = new Set(
+          (ANSWER_WORDS[len] || []).map(word => word.toUpperCase())
+        );
+
+        progressState.seen[len] = normalizeWordList(progressState.seen[len])
+          .filter(word => currentAnswers.has(word));
+
+        progressState.solved[len] = normalizeWordList(progressState.solved[len])
+          .filter(word => currentAnswers.has(word));
+      }
+    }
+
+    function saveProgressState() {
+      try {
+        localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(progressState));
+      } catch (err) {
+        console.warn("Could not save progress:", err);
+      }
+    }
+
+    function markSeen(word) {
+      const normalized = word.toUpperCase();
+      const list = progressState.seen[wordLength] || [];
+
+      if (!list.includes(normalized)) {
+        list.push(normalized);
+        progressState.seen[wordLength] = list;
+        saveProgressState();
+      }
+    }
+
+    function markSolved(word) {
+      const normalized = word.toUpperCase();
+      const list = progressState.solved[wordLength] || [];
+
+      if (!list.includes(normalized)) {
+        list.push(normalized);
+        progressState.solved[wordLength] = list;
+        saveProgressState();
+        renderProgress();
+      }
+    }
+
+    function renderProgress() {
+      reconcileProgressState();
+
+      progressList.innerHTML = "";
+      let totalSolved = 0;
+      let totalAnswers = 0;
+
+      for (let len = 3; len <= 8; len++) {
+        const answerCount = (ANSWER_WORDS[len] || []).length;
+        const solvedCount = (progressState.solved[len] || []).length;
+
+        totalSolved += solvedCount;
+        totalAnswers += answerCount;
+
+        const row = document.createElement("div");
+        row.className = "progress-row";
+
+        const label = document.createElement("span");
+        label.className = "progress-label";
+        label.textContent = `${len} letters`;
+
+        const count = document.createElement("span");
+        count.className = "progress-count";
+        count.textContent = `${solvedCount} / ${answerCount}`;
+
+        row.appendChild(label);
+        row.appendChild(count);
+        progressList.appendChild(row);
+      }
+
+      progressTotal.textContent = `${totalSolved} / ${totalAnswers}`;
+    }
+
     function chooseAnswer() {
-      const list = ANSWER_WORDS[wordLength];
-      return list[Math.floor(Math.random() * list.length)].toUpperCase();
+      const list = (ANSWER_WORDS[wordLength] || []).map(word => word.toUpperCase());
+
+      if (!list.length) {
+        throw new Error(`No ${wordLength}-letter answers are available.`);
+      }
+
+      let seen = new Set(progressState.seen[wordLength] || []);
+      let available = list.filter(word => !seen.has(word));
+
+      // A cycle resets only after every CURRENT answer of this length has
+      // been presented. Solved history is never reset.
+      if (!available.length) {
+        progressState.seen[wordLength] = [];
+        seen = new Set();
+        available = [...list];
+        saveProgressState();
+      }
+
+      const chosen = available[Math.floor(Math.random() * available.length)];
+      markSeen(chosen);
+      return chosen;
     }
 
     function startGame(newLength = wordLength) {
@@ -921,6 +1177,7 @@
       isAnimating = false;
 
       if (isWin) {
+        markSolved(answer);
         showMessage("");
         showWinCelebration();
       } else if (isLoss) {
@@ -1210,8 +1467,24 @@
     hintBtn.onclick = giveHint;
 
     settingsBtn.onclick = () => {
-      const isOpen = settingsPanel.classList.toggle("show");
-      settingsBtn.setAttribute("aria-expanded", String(isOpen));
+      const willOpen = !settingsPanel.classList.contains("show");
+
+      progressPanel.classList.remove("show");
+      progressBtn.setAttribute("aria-expanded", "false");
+
+      settingsPanel.classList.toggle("show", willOpen);
+      settingsBtn.setAttribute("aria-expanded", String(willOpen));
+    };
+
+    progressBtn.onclick = () => {
+      const willOpen = !progressPanel.classList.contains("show");
+
+      settingsPanel.classList.remove("show");
+      settingsBtn.setAttribute("aria-expanded", "false");
+
+      if (willOpen) renderProgress();
+      progressPanel.classList.toggle("show", willOpen);
+      progressBtn.setAttribute("aria-expanded", String(willOpen));
     };
 
     modeButtons.addEventListener("click", (event) => {
@@ -1223,6 +1496,8 @@
 
     window.addEventListener("resize", renderBoard);
 
+    loadProgressState();
+    renderProgress();
     setGameMode("easy");
     startGame();
 
