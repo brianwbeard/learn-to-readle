@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#f7f7f2" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Learn To Readle" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icon-180.png" />
+  <title>Learn To Readle</title>
+  <style>
+    :root {
+      --bg: #f7f7f2;
+      --panel: #ffffff;
+      --text: #202124;
+      --muted: #6b7280;
+      --border: #c9cdd2;
+      --key: #d8dadd;
+      --correct: #6aaa64;
+      --present: #c9b458;
+      --absent: #787c7e;
+      --accent: #4f7cac;
+      --danger: #b23a48;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+    }
+
+    .app {
+      width: min(100%, 760px);
+      min-height: 100vh;
+      padding: 16px 14px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 6vw, 42px);
+      line-height: 1;
+    }
+
+    .top-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    button {
+      font: inherit;
+      border: 0;
+      border-radius: 10px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .small-btn {
+      padding: 10px 12px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      font-weight: 700;
+    }
+
+
+    .mode-control {
+      background: var(--panel);
+      border: 1px solid #e0e2e5;
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .mode-control strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+
+    .mode-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 7px;
+    }
+
+    .mode-btn {
+      min-height: 48px;
+      padding: 8px 7px;
+      background: #eef0f2;
+      border: 2px solid transparent;
+      font-weight: 800;
+      font-size: 15px;
+    }
+
+    .mode-btn.active {
+      border-color: var(--accent);
+      background: #e6eef8;
+    }
+
+    .mode-explainer {
+      margin-top: 8px;
+      min-height: 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .controls {
+      background: var(--panel);
+      border: 1px solid #e0e2e5;
+      border-radius: 14px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .controls strong {
+      font-size: 16px;
+    }
+
+    .length-buttons {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .length-btn {
+      width: 42px;
+      height: 42px;
+      background: #eef0f2;
+      font-weight: 800;
+      font-size: 17px;
+      border: 2px solid transparent;
+    }
+
+    .length-btn.active {
+      border-color: var(--accent);
+      background: #e6eef8;
+    }
+
+    #message {
+      min-height: 28px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 800;
+      padding: 2px 8px;
+    }
+
+    #board {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 320px;
+    }
+
+    .row {
+      display: grid;
+      gap: 5px;
+      justify-content: center;
+    }
+
+    .tile {
+      width: var(--tile-size);
+      height: var(--tile-size);
+      border: 2px solid var(--border);
+      background: var(--panel);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: calc(var(--tile-size) * 0.52);
+      font-weight: 800;
+      text-transform: uppercase;
+      user-select: none;
+      border-radius: 4px;
+    }
+
+    .tile.filled {
+      border-color: #878a8c;
+    }
+
+    .tile.correct {
+      background: var(--correct);
+      border-color: var(--correct);
+      color: white;
+    }
+
+    .tile.present {
+      background: var(--present);
+      border-color: var(--present);
+      color: white;
+    }
+
+    .tile.absent {
+      background: var(--absent);
+      border-color: var(--absent);
+      color: white;
+    }
+
+    .keyboard {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      padding-top: 4px;
+    }
+
+    .key-row {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .key {
+      height: 54px;
+      min-width: 0;
+      flex: 1 1 0;
+      max-width: 54px;
+      padding: 0 4px;
+      background: var(--key);
+      font-weight: 800;
+      font-size: 16px;
+      border-radius: 6px;
+    }
+
+    .key.wide {
+      flex: 1.45 1 0;
+      max-width: 78px;
+      font-size: 13px;
+    }
+
+    .key.correct { background: var(--correct); color: white; }
+    .key.present { background: var(--present); color: white; }
+    .key.absent { background: var(--absent); color: white; }
+
+    .bottom-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .action-btn {
+      padding: 12px 16px;
+      font-weight: 800;
+      font-size: 16px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+    }
+
+    .action-btn.primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .legend {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--muted);
+      flex-wrap: wrap;
+    }
+
+    .legend span::before {
+      content: "";
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+      margin-right: 5px;
+      vertical-align: -1px;
+    }
+
+    .legend .green::before { background: var(--correct); }
+    .legend .yellow::before { background: var(--present); }
+    .legend .gray::before { background: var(--absent); }
+
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.42);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 1000;
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    .win-modal {
+      width: min(92vw, 460px);
+      background: white;
+      border-radius: 20px;
+      padding: 28px 22px 22px;
+      text-align: center;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.25);
+      position: relative;
+      z-index: 1002;
+    }
+
+    .win-modal h2 {
+      font-size: clamp(28px, 7vw, 40px);
+      margin: 0 0 12px;
+    }
+
+    .win-modal p {
+      margin: 0 0 20px;
+      font-size: clamp(20px, 5vw, 28px);
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .win-word {
+      color: var(--correct);
+      text-transform: uppercase;
+    }
+
+    .modal-button {
+      padding: 13px 20px;
+      background: var(--accent);
+      color: white;
+      font-weight: 800;
+      font-size: 18px;
+      border-radius: 10px;
+    }
+
+    #confettiCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1001;
+      display: none;
+    }
+
+    #confettiCanvas.show {
+      display: block;
+    }
+
+    .action-btn:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+
+
+    @media (max-width: 700px) {
+      #message {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: var(--bg);
+        padding: 8px 10px;
+        margin: -4px 0 2px;
+        border-radius: 10px;
+      }
+
+      .keyboard {
+        position: sticky;
+        bottom: 0;
+        z-index: 40;
+        background: var(--bg);
+        padding-bottom: max(8px, env(safe-area-inset-bottom));
+      }
+    }
+
+    @media (max-width: 430px) {
+      .app { padding-left: 8px; padding-right: 8px; }
+  
+    .mode-control {
+      background: var(--panel);
+      border: 1px solid #e0e2e5;
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .mode-control strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+
+    .mode-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 7px;
+    }
+
+    .mode-btn {
+      min-height: 48px;
+      padding: 8px 7px;
+      background: #eef0f2;
+      border: 2px solid transparent;
+      font-weight: 800;
+      font-size: 15px;
+    }
+
+    .mode-btn.active {
+      border-color: var(--accent);
+      background: #e6eef8;
+    }
+
+    .mode-explainer {
+      margin-top: 8px;
+      min-height: 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .controls { justify-content: center; }
+      .controls > strong { width: 100%; text-align: center; }
+      .key { height: 50px; font-size: 15px; }
+      .key-row { gap: 3px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <h1>Learn To Readle</h1>
+      <div class="top-buttons">
+        <button class="small-btn" id="newGameBtn">New Word</button>
+      </div>
+    </header>
+
+    <section class="controls" aria-label="Game settings">
+      <strong>How many letters?</strong>
+      <div class="length-buttons" id="lengthButtons"></div>
+    </section>
+
+    <section class="mode-control" aria-label="Game mode">
+      <strong>Game mode</strong>
+      <div class="mode-buttons" id="modeButtons">
+        <button class="mode-btn active" data-mode="easy">Easy</button>
+        <button class="mode-btn" data-mode="hard">Hard</button>
+      </div>
+      <div class="mode-explainer" id="modeExplainer">Guesses must be real words.</div>
+    </section>
+
+    <div id="message" aria-live="polite"></div>
+
+    <section id="board" aria-label="Word game board"></section>
+
+    <div class="bottom-actions">
+      <button class="action-btn" id="hintBtn">Hint</button>
+      <button class="action-btn primary" id="newGameBtn2">New Word</button>
+    </div>
+
+    <div class="legend">
+      <span class="green">right spot</span>
+      <span class="yellow">wrong spot</span>
+      <span class="gray">not in word</span>
+    </div>
+
+    <section class="keyboard" id="keyboard" aria-label="Keyboard"></section>
+
+    <div class="modal-backdrop" id="winModal" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+      <div class="win-modal">
+        <h2 id="winTitle">You got it right! 🎉</h2>
+        <p>The word is <span class="win-word" id="winWord"></span>.</p>
+        <button class="modal-button" id="playAgainBtn">Play Again</button>
+      </div>
+    </div>
+    <canvas id="confettiCanvas"></canvas>
+
+  </main>
+
+  <script src="dictionary.js"></script>
+  <script>
+    /*
+      LEARN TO READLE
+      ----------
+      A simple, kid-friendly Wordle-style game.
+
+      TO CUSTOMIZE:
+      1. Add/remove answer words in ANSWER_WORDS.
+      2. Add extra acceptable guesses in EXTRA_GUESSES.
+      3. Change DEFAULT_LENGTH or MAX_GUESSES below.
+    */
+
+    if (!window.VALID_WORDS) {
+      document.body.innerHTML = "<p style='font-family:sans-serif;padding:20px'>Dictionary failed to load.</p>";
+      throw new Error("dictionary.js did not load");
+    }
+
+    const DEFAULT_LENGTH = 5;
+    const MAX_GUESSES = 8;
+
+    // These are the words the game can choose as the answer.
+    // Keep these familiar and kid-friendly.
+    const ANSWER_WORDS = {
+      3: [
+        "ant","ape","arm","bag","bat","bed","bee","box","boy","bus","can","cap","car","cat","cow",
+        "cup","day","dog","ear","egg","eye","fan","fox","fun","hat","hen","hip","hot","jam","jar",
+        "key","leg","map","mop","mud","net","owl","pan","pen","pet","pig","pie","red","run","sea",
+        "sky","sun","toy","van","web","wet","wig","yes","zip"
+      ],
+      4: [
+        "baby","ball","bear","bird","blue","boat","book","cake","camp","card","coat","corn","crab",
+        "dark","deer","desk","door","duck","farm","fish","flag","frog","game","goat","gold","hand",
+        "home","jump","king","kite","lamp","leaf","lion","milk","moon","nest","park","pear","pink",
+        "play","rain","ring","road","rock","shoe","snow","sock","star","swim","tree","truck","wall",
+        "wind","wing","wolf","worm"
+      ],
+      5: [
+        "apple","beach","bread","brown","brush","chair","cheese","cloud","dance","dream","drink",
+        "earth","flame","grape","grass","green","happy","heart","horse","house","juice","kitty",
+        "light","mouse","music","ocean","panda","party","peach","pizza","plant","queen","river",
+        "robot","sheep","shirt","smile","snake","spoon","storm","tiger","toast","train","water",
+        "whale","white","world","zebra"
+      ],
+      6: [
+        "animal","banana","basket","button","candle","castle","circle","cookie","dragon","flower",
+        "friend","garden","guitar","kitten","monkey","orange","pencil","planet","rabbit","rocket",
+        "school","silver","soccer","spider","summer","turtle","window","winter","yellow"
+      ],
+      7: [
+        "airship","balloon","blanket","chicken","cupcake","dolphin","firefly","football","giraffe",
+        "monster","pancake","penguin","rainbow","sandbox","teacher","tractor","unicorn"
+      ],
+      8: [
+        "airplane","baseball","birthday","bluebird","dinosaur","elephant","firework","football",
+        "sandwich","snowball","sunshine","treasure"
+      ]
+    };
+
+    // Any words here are accepted as guesses but will NOT be selected as answers.
+    // This first draft intentionally keeps validation relaxed for kids:
+    // if a guess is the correct length and only uses letters, it is accepted.
+
+
+    let wordLength = DEFAULT_LENGTH;
+    let answer = "";
+    let guesses = [];
+    let currentGuess = "";
+    let gameOver = false;
+    let keyStates = {};
+    let hintUsedThisGuess = false;
+    let hintCount = 0;
+    let hintedLetters = new Set();
+    let hintedLocations = new Set();
+    let gameMode = "easy";
+
+    const board = document.getElementById("board");
+    const keyboard = document.getElementById("keyboard");
+    const message = document.getElementById("message");
+    const lengthButtons = document.getElementById("lengthButtons");
+    const hintBtn = document.getElementById("hintBtn");
+    const winModal = document.getElementById("winModal");
+    const winWord = document.getElementById("winWord");
+    const confettiCanvas = document.getElementById("confettiCanvas");
+    const modeButtons = document.getElementById("modeButtons");
+    const modeExplainer = document.getElementById("modeExplainer");
+
+
+    function setGameMode(mode) {
+      gameMode = mode;
+      document.querySelectorAll(".mode-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.mode === mode);
+      });
+
+      const descriptions = {
+        easy: "Guesses must be real words.",
+        hard: "Guesses must be real words and use everything you have learned."
+      };
+      modeExplainer.textContent = descriptions[mode];
+      showMessage("");
+    }
+
+    function isRealWord(word) {
+      return window.VALID_WORDS[wordLength].includes(word.toLowerCase());
+    }
+
+    function getKnowledgeConstraints() {
+      const greens = Array(wordLength).fill(null);
+      const yellowForbidden = Array.from({ length: wordLength }, () => new Set());
+      const minimumCounts = {};
+      const maximumCounts = {};
+
+      for (const guess of guesses) {
+        const evaluation = evaluateGuess(guess, answer);
+
+        // For duplicate-letter logic, count how many copies were positively
+        // identified (green or yellow), and how many copies were guessed.
+        const guessCounts = {};
+        const positiveCounts = {};
+        for (let i = 0; i < wordLength; i++) {
+          const letter = guess[i];
+          guessCounts[letter] = (guessCounts[letter] || 0) + 1;
+
+          if (evaluation[i] === "correct") {
+            greens[i] = letter;
+            positiveCounts[letter] = (positiveCounts[letter] || 0) + 1;
+          } else if (evaluation[i] === "present") {
+            yellowForbidden[i].add(letter);
+            positiveCounts[letter] = (positiveCounts[letter] || 0) + 1;
+          }
+        }
+
+        for (const [letter, count] of Object.entries(positiveCounts)) {
+          minimumCounts[letter] = Math.max(minimumCounts[letter] || 0, count);
+        }
+
+        for (const [letter, guessedCount] of Object.entries(guessCounts)) {
+          const positive = positiveCounts[letter] || 0;
+          if (positive < guessedCount) {
+            const currentMax = maximumCounts[letter];
+            maximumCounts[letter] = currentMax === undefined
+              ? positive
+              : Math.min(currentMax, positive);
+          }
+        }
+      }
+
+      return { greens, yellowForbidden, minimumCounts, maximumCounts };
+    }
+
+    function hardModeViolation(word) {
+      const { greens, yellowForbidden, minimumCounts, maximumCounts } = getKnowledgeConstraints();
+      const counts = {};
+      for (const letter of word) counts[letter] = (counts[letter] || 0) + 1;
+
+      for (let i = 0; i < wordLength; i++) {
+        if (greens[i] && word[i] !== greens[i]) {
+          return `Keep ${greens[i]} in spot ${i + 1}.`;
+        }
+        if (yellowForbidden[i].has(word[i])) {
+          return `${word[i]} cannot go in spot ${i + 1}.`;
+        }
+      }
+
+      for (const [letter, minCount] of Object.entries(minimumCounts)) {
+        if ((counts[letter] || 0) < minCount) {
+          return `Your guess must include ${letter}.`;
+        }
+      }
+
+      for (const [letter, maxCount] of Object.entries(maximumCounts)) {
+        if ((counts[letter] || 0) > maxCount) {
+          if (maxCount === 0) return `${letter} is not in the word.`;
+          return `There ${maxCount === 1 ? "is" : "are"} only ${maxCount} ${letter}${maxCount === 1 ? "" : "s"}.`;
+        }
+      }
+
+      return null;
+    }
+
+    function chooseAnswer() {
+      const list = ANSWER_WORDS[wordLength];
+      return list[Math.floor(Math.random() * list.length)].toUpperCase();
+    }
+
+    function startGame(newLength = wordLength) {
+      wordLength = newLength;
+      answer = chooseAnswer();
+      guesses = [];
+      currentGuess = "";
+      gameOver = false;
+      keyStates = {};
+      hintUsedThisGuess = false;
+      hintCount = 0;
+      hintedLetters = new Set();
+      hintedLocations = new Set();
+      message.textContent = "";
+      hintBtn.disabled = false;
+      winModal.classList.remove("show");
+      stopConfetti();
+      renderLengthButtons();
+      renderBoard();
+      renderKeyboard();
+      console.log("Answer:", answer); // Helpful while testing. Remove later if desired.
+    }
+
+    function renderLengthButtons() {
+      lengthButtons.innerHTML = "";
+      for (let len = 3; len <= 8; len++) {
+        const btn = document.createElement("button");
+        btn.className = "length-btn" + (len === wordLength ? " active" : "");
+        btn.textContent = len;
+        btn.setAttribute("aria-label", `${len} letter words`);
+        btn.onclick = () => startGame(len);
+        lengthButtons.appendChild(btn);
+      }
+    }
+
+    function getTileSize() {
+      // Keeps 8-letter games on small phone screens.
+      const available = Math.min(window.innerWidth - 28, 600);
+      const gaps = (wordLength - 1) * 5;
+      const size = Math.floor((available - gaps) / wordLength);
+      return Math.max(34, Math.min(58, size));
+    }
+
+    function renderBoard() {
+      board.innerHTML = "";
+      const tileSize = getTileSize();
+
+      // Show all submitted guesses, one active row, and enough empty rows
+      // to reach MAX_GUESSES.
+      for (let rowIndex = 0; rowIndex < MAX_GUESSES; rowIndex++) {
+        const row = document.createElement("div");
+        row.className = "row";
+        row.style.gridTemplateColumns = `repeat(${wordLength}, ${tileSize}px)`;
+        row.style.setProperty("--tile-size", `${tileSize}px`);
+
+        let text = "";
+        let evaluation = null;
+
+        if (rowIndex < guesses.length) {
+          text = guesses[rowIndex];
+          evaluation = evaluateGuess(text, answer);
+        } else if (rowIndex === guesses.length && !gameOver) {
+          text = currentGuess;
+        }
+
+        for (let i = 0; i < wordLength; i++) {
+          const tile = document.createElement("div");
+          tile.className = "tile";
+          const letter = text[i] || "";
+          tile.textContent = letter;
+
+          if (letter && !evaluation) tile.classList.add("filled");
+          if (evaluation) tile.classList.add(evaluation[i]);
+
+          row.appendChild(tile);
+        }
+        board.appendChild(row);
+      }
+    }
+
+    function evaluateGuess(guess, target) {
+      const result = Array(wordLength).fill("absent");
+      const remaining = target.split("");
+
+      // First pass: exact matches.
+      for (let i = 0; i < wordLength; i++) {
+        if (guess[i] === target[i]) {
+          result[i] = "correct";
+          remaining[i] = null;
+        }
+      }
+
+      // Second pass: right letter, wrong place.
+      for (let i = 0; i < wordLength; i++) {
+        if (result[i] === "correct") continue;
+        const matchIndex = remaining.indexOf(guess[i]);
+        if (matchIndex !== -1) {
+          result[i] = "present";
+          remaining[matchIndex] = null;
+        }
+      }
+
+      return result;
+    }
+
+    function submitGuess() {
+      if (gameOver) return;
+
+      if (currentGuess.length !== wordLength) {
+        showMessage(`You need ${wordLength} letters.`);
+        return;
+      }
+
+      const guess = currentGuess.toUpperCase();
+
+      if (!/^[A-Z]+$/.test(guess)) {
+        showMessage("Use letters only.");
+        return;
+      }
+
+      if (!isRealWord(guess)) {
+        showMessage("That isn't in my word list.");
+        return;
+      }
+
+      if (gameMode === "hard") {
+        const violation = hardModeViolation(guess);
+        if (violation) {
+          showMessage(violation);
+          return;
+        }
+      }
+
+      guesses.push(guess);
+      updateKeyStates(guess);
+      currentGuess = "";
+      hintUsedThisGuess = false;
+      hintBtn.disabled = false;
+
+      if (guess === answer) {
+        gameOver = true;
+        hintBtn.disabled = true;
+        showMessage("");
+        showWinCelebration();
+      } else if (guesses.length >= MAX_GUESSES) {
+        gameOver = true;
+        showMessage(`The word was ${answer}. Try another!`);
+      } else {
+        showMessage("");
+      }
+
+      renderBoard();
+      renderKeyboard();
+    }
+
+    function randomWinMessage() {
+      const messages = [
+        "You got it! 🎉",
+        "Awesome! ⭐",
+        "Great job! 🥳",
+        "Amazing! 🌟",
+        "Yes! You solved it! 🎈"
+      ];
+      return messages[Math.floor(Math.random() * messages.length)];
+    }
+
+    function updateKeyStates(guess) {
+      const states = evaluateGuess(guess, answer);
+      const rank = { absent: 1, present: 2, correct: 3 };
+
+      guess.split("").forEach((letter, i) => {
+        const newState = states[i];
+        const oldState = keyStates[letter];
+        if (!oldState || rank[newState] > rank[oldState]) {
+          keyStates[letter] = newState;
+        }
+      });
+    }
+
+    function addLetter(letter) {
+      if (gameOver) return;
+      if (currentGuess.length < wordLength) {
+        currentGuess += letter.toUpperCase();
+        renderBoard();
+      }
+    }
+
+    function backspace() {
+      if (gameOver) return;
+      currentGuess = currentGuess.slice(0, -1);
+      renderBoard();
+    }
+
+    function giveHint() {
+      if (gameOver) return;
+
+      if (hintUsedThisGuess) {
+        showMessage("Try a guess before using another hint.");
+        return;
+      }
+
+      const evaluations = guesses.map(g => ({
+        guess: g,
+        result: evaluateGuess(g, answer)
+      }));
+
+      // Letters already visibly confirmed by the board.
+      const knownPresentLetters = new Set();
+      evaluations.forEach(({ guess, result }) => {
+        result.forEach((state, i) => {
+          if (state === "correct" || state === "present") {
+            knownPresentLetters.add(guess[i]);
+          }
+        });
+      });
+
+      function giveNewLetterHint() {
+        // Prefer a letter that has not already been shown as green/yellow
+        // and has not been used in an earlier hint.
+        const answerLetters = [...new Set(answer.split(""))];
+        let choices = answerLetters.filter(
+          l => !knownPresentLetters.has(l) && !hintedLetters.has(l)
+        );
+
+        // If every letter is already visible on the board, still avoid
+        // repeating an earlier hint if possible.
+        if (!choices.length) {
+          choices = answerLetters.filter(l => !hintedLetters.has(l));
+        }
+        if (!choices.length) return false;
+
+        const letter = choices[Math.floor(Math.random() * choices.length)];
+        hintedLetters.add(letter);
+        showMessage(`Hint: The word has the letter ${letter}.`);
+        return true;
+      }
+
+      function giveYellowLocationHint() {
+        const candidates = [];
+
+        evaluations.forEach(({ guess, result }) => {
+          result.forEach((state, i) => {
+            if (state !== "present") return;
+
+            const letter = guess[i];
+            for (let targetIndex = 0; targetIndex < wordLength; targetIndex++) {
+              if (answer[targetIndex] === letter) {
+                const key = `${letter}-${targetIndex}`;
+                if (!hintedLocations.has(key)) {
+                  candidates.push({ letter, targetIndex, key });
+                }
+              }
+            }
+          });
+        });
+
+        if (!candidates.length) return false;
+
+        const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+        hintedLocations.add(chosen.key);
+        const placeNames = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth"];
+        showMessage(`Hint: The yellow ${chosen.letter} belongs in the ${placeNames[chosen.targetIndex]} spot.`);
+        return true;
+      }
+
+      let gaveHint = false;
+
+      // First hint is always a letter with no location.
+      // Thereafter: yellow-letter location, new letter, yellow-letter location...
+      if (hintCount === 0) {
+        gaveHint = giveNewLetterHint();
+      } else if (hintCount % 2 === 1) {
+        gaveHint = giveYellowLocationHint() || giveNewLetterHint();
+      } else {
+        gaveHint = giveNewLetterHint() || giveYellowLocationHint();
+      }
+
+      if (!gaveHint) {
+        showMessage("You've uncovered everything I can hint!");
+        hintBtn.disabled = true;
+        return;
+      }
+
+      hintCount++;
+      hintUsedThisGuess = true;
+      hintBtn.disabled = true;
+    }
+
+    function showWinCelebration() {
+      winWord.textContent = answer;
+      winModal.classList.add("show");
+      launchConfetti();
+    }
+
+    let confettiAnimationId = null;
+
+    function launchConfetti() {
+      const ctx = confettiCanvas.getContext("2d");
+      const dpr = window.devicePixelRatio || 1;
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      confettiCanvas.width = width * dpr;
+      confettiCanvas.height = height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      confettiCanvas.classList.add("show");
+
+      const colors = ["#6aaa64", "#c9b458", "#4f7cac", "#ef476f", "#ffd166", "#8b5cf6"];
+      const pieces = Array.from({ length: 140 }, () => ({
+        x: Math.random() * width,
+        y: -20 - Math.random() * height * 0.35,
+        w: 6 + Math.random() * 7,
+        h: 9 + Math.random() * 10,
+        vx: -2 + Math.random() * 4,
+        vy: 2.5 + Math.random() * 4,
+        rotation: Math.random() * Math.PI,
+        spin: -0.15 + Math.random() * 0.3,
+        color: colors[Math.floor(Math.random() * colors.length)]
+      }));
+
+      const start = performance.now();
+
+      function frame(now) {
+        ctx.clearRect(0, 0, width, height);
+
+        for (const p of pieces) {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.025;
+          p.rotation += p.spin;
+
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rotation);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+        }
+
+        if (now - start < 3500) {
+          confettiAnimationId = requestAnimationFrame(frame);
+        } else {
+          stopConfetti();
+        }
+      }
+
+      if (confettiAnimationId) cancelAnimationFrame(confettiAnimationId);
+      confettiAnimationId = requestAnimationFrame(frame);
+    }
+
+    function stopConfetti() {
+      if (confettiAnimationId) {
+        cancelAnimationFrame(confettiAnimationId);
+        confettiAnimationId = null;
+      }
+      const ctx = confettiCanvas.getContext("2d");
+      ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      confettiCanvas.classList.remove("show");
+    }
+
+    function showMessage(text) {
+      message.textContent = text;
+    }
+
+    function renderKeyboard() {
+      const rows = [
+        ["Q","W","E","R","T","Y","U","I","O","P"],
+        ["A","S","D","F","G","H","J","K","L"],
+        ["ENTER","Z","X","C","V","B","N","M","⌫"]
+      ];
+
+      keyboard.innerHTML = "";
+
+      rows.forEach(keys => {
+        const row = document.createElement("div");
+        row.className = "key-row";
+
+        keys.forEach(k => {
+          const btn = document.createElement("button");
+          btn.className = "key";
+          btn.textContent = k;
+
+          if (k === "ENTER" || k === "⌫") {
+            btn.classList.add("wide");
+          } else if (keyStates[k]) {
+            btn.classList.add(keyStates[k]);
+          }
+
+          btn.onclick = () => {
+            if (k === "ENTER") submitGuess();
+            else if (k === "⌫") backspace();
+            else addLetter(k);
+          };
+
+          row.appendChild(btn);
+        });
+
+        keyboard.appendChild(row);
+      });
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        submitGuess();
+      } else if (event.key === "Backspace") {
+        event.preventDefault();
+        backspace();
+      } else if (/^[a-zA-Z]$/.test(event.key)) {
+        addLetter(event.key);
+      }
+    });
+
+    document.getElementById("newGameBtn").onclick = () => startGame();
+    document.getElementById("newGameBtn2").onclick = () => startGame();
+    hintBtn.onclick = giveHint;
+    modeButtons.addEventListener("click", (event) => {
+      const btn = event.target.closest(".mode-btn");
+      if (btn) setGameMode(btn.dataset.mode);
+    });
+    document.getElementById("playAgainBtn").onclick = () => startGame();
+
+    window.addEventListener("resize", renderBoard);
+
+    setGameMode("easy");
+    startGame();
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./service-worker.js").catch(err => {
+          console.warn("Service worker registration failed:", err);
+        });
+      });
+    }
+  </script>
+</body>
+</html>
