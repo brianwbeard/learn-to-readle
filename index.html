@@ -324,6 +324,47 @@
     .legend .gray::before { background: var(--absent); }
 
 
+
+    .tile.flip {
+      animation: tileFlip 700ms ease forwards;
+      transform-style: preserve-3d;
+    }
+
+    @keyframes tileFlip {
+      0%   { transform: rotateX(0deg); }
+      45%  { transform: rotateX(90deg); }
+      55%  { transform: rotateX(90deg); }
+      100% { transform: rotateX(0deg); }
+    }
+
+    .result-modal {
+      width: min(92vw, 460px);
+      background: white;
+      border-radius: 20px;
+      padding: 28px 22px 22px;
+      text-align: center;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.25);
+      position: relative;
+      z-index: 1002;
+    }
+
+    .result-modal h2 {
+      font-size: clamp(28px, 7vw, 40px);
+      margin: 0 0 12px;
+    }
+
+    .result-modal p {
+      margin: 0 0 20px;
+      font-size: clamp(20px, 5vw, 28px);
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .result-word {
+      color: var(--correct);
+      text-transform: uppercase;
+    }
+
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -409,22 +450,20 @@
 
       .keyboard {
         position: sticky;
-        bottom: max(20px, calc(env(safe-area-inset-bottom) + 10px));
+        bottom: max(10px, env(safe-area-inset-bottom));
         z-index: 40;
         background: var(--bg);
         padding-bottom: 0;
       }
 
       .row.active-guess {
-  position: sticky;
-  top: 44px;
-  z-index: 44;
-  background: #eef0f2;
-  padding: 7px 9px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-}
+        position: sticky;
+        top: 44px;
+        z-index: 44;
+        background: var(--bg);
+        padding: 4px 0;
+        border-radius: 8px;
+      }
 
       .row.active-guess.after-latest {
         top: 108px;
@@ -539,12 +578,21 @@
     <section class="keyboard" id="keyboard" aria-label="Keyboard"></section>
 
     <div class="modal-backdrop" id="winModal" role="dialog" aria-modal="true" aria-labelledby="winTitle">
-      <div class="win-modal">
+      <div class="result-modal">
         <h2 id="winTitle">You got it right! 🎉</h2>
-        <p>The word is <span class="win-word" id="winWord"></span>.</p>
+        <p>The word is <span class="result-word" id="winWord"></span>.</p>
         <button class="modal-button" id="playAgainBtn">Play Again</button>
       </div>
     </div>
+
+    <div class="modal-backdrop" id="lossModal" role="dialog" aria-modal="true" aria-labelledby="lossTitle">
+      <div class="result-modal">
+        <h2 id="lossTitle">Better luck next time!</h2>
+        <p>The word was <span class="result-word" id="lossWord"></span>.</p>
+        <button class="modal-button" id="tryAgainBtn">Try Another Word</button>
+      </div>
+    </div>
+
     <canvas id="confettiCanvas"></canvas>
 
   </main>
@@ -592,6 +640,7 @@
     let hintedLetters = new Set();
     let hintedLocations = new Set();
     let gameMode = "easy";
+    let isAnimating = false;
 
     const board = document.getElementById("board");
     const keyboard = document.getElementById("keyboard");
@@ -600,6 +649,8 @@
     const hintBtn = document.getElementById("hintBtn");
     const winModal = document.getElementById("winModal");
     const winWord = document.getElementById("winWord");
+    const lossModal = document.getElementById("lossModal");
+    const lossWord = document.getElementById("lossWord");
     const confettiCanvas = document.getElementById("confettiCanvas");
     const modeButtons = document.getElementById("modeButtons");
     const modeExplainer = document.getElementById("modeExplainer");
@@ -718,6 +769,8 @@
       message.textContent = "";
       hintBtn.disabled = false;
       winModal.classList.remove("show");
+      lossModal.classList.remove("show");
+      isAnimating = false;
       stopConfetti();
       renderLengthButtons();
       renderBoard();
@@ -815,8 +868,8 @@
       return result;
     }
 
-    function submitGuess() {
-      if (gameOver) return;
+    async function submitGuess() {
+      if (gameOver || isAnimating) return;
 
       if (currentGuess.length !== wordLength) {
         showMessage(`You need ${wordLength} letters.`);
@@ -843,35 +896,64 @@
         }
       }
 
+      const submittedIndex = guesses.length;
       guesses.push(guess);
       updateKeyStates(guess);
       currentGuess = "";
       hintUsedThisGuess = false;
       hintBtn.disabled = false;
 
-      if (guess === answer) {
+      const isWin = guess === answer;
+      const isLoss = !isWin && guesses.length >= MAX_GUESSES;
+
+      if (isWin || isLoss) {
         gameOver = true;
         hintBtn.disabled = true;
-        showMessage("");
-        showWinCelebration();
-      } else if (guesses.length >= MAX_GUESSES) {
-        gameOver = true;
-        showMessage(`The word was ${answer}. Try another!`);
-      } else {
-        showMessage("");
       }
 
       renderBoard();
       renderKeyboard();
+
+      isAnimating = true;
+      await animateSubmittedRow(submittedIndex);
+      isAnimating = false;
+
+      if (isWin) {
+        showMessage("");
+        showWinCelebration();
+      } else if (isLoss) {
+        showMessage("");
+        showLossResult();
+      } else {
+        showMessage("");
+      }
+    }
+
+    async function animateSubmittedRow(rowIndex) {
+      const rows = board.querySelectorAll(".row");
+      const row = rows[rowIndex];
+      if (!row) return;
+
+      const tiles = row.querySelectorAll(".tile");
+      for (let i = 0; i < tiles.length; i++) {
+        tiles[i].classList.add("flip");
+        await new Promise(resolve => setTimeout(resolve, 145));
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 560));
+      tiles.forEach(tile => tile.classList.remove("flip"));
     }
 
     function randomWinMessage() {
       const messages = [
-        "You got it! 🎉",
-        "Awesome! ⭐",
-        "Great job! 🥳",
-        "Amazing! 🌟",
-        "Yes! You solved it! 🎈"
+        "You got it right! 🎉",
+        "Great reading! 🌟",
+        "Awesome job! 🥳",
+        "You solved it! 🎈",
+        "Nice work! ⭐",
+        "Fantastic! 🎊",
+        "Way to go! 🚀",
+        "Brilliant! ✨"
       ];
       return messages[Math.floor(Math.random() * messages.length)];
     }
@@ -890,7 +972,7 @@
     }
 
     function addLetter(letter) {
-      if (gameOver) return;
+      if (gameOver || isAnimating) return;
       if (currentGuess.length < wordLength) {
         currentGuess += letter.toUpperCase();
         renderBoard();
@@ -898,13 +980,13 @@
     }
 
     function backspace() {
-      if (gameOver) return;
+      if (gameOver || isAnimating) return;
       currentGuess = currentGuess.slice(0, -1);
       renderBoard();
     }
 
     function giveHint() {
-      if (gameOver) return;
+      if (gameOver || isAnimating) return;
 
       if (hintUsedThisGuess) {
         showMessage("Try a guess before using another hint.");
@@ -916,29 +998,27 @@
         result: evaluateGuess(g, answer)
       }));
 
-      // Letters already visibly confirmed by the board.
+      const knownGreenPositions = new Map();
       const knownPresentLetters = new Set();
+      const knownYellowLetters = new Set();
+
       evaluations.forEach(({ guess, result }) => {
         result.forEach((state, i) => {
-          if (state === "correct" || state === "present") {
+          if (state === "correct") {
+            knownGreenPositions.set(i, guess[i]);
             knownPresentLetters.add(guess[i]);
+          } else if (state === "present") {
+            knownPresentLetters.add(guess[i]);
+            knownYellowLetters.add(guess[i]);
           }
         });
       });
 
-      function giveNewLetterHint() {
-        // Prefer a letter that has not already been shown as green/yellow
-        // and has not been used in an earlier hint.
-        const answerLetters = [...new Set(answer.split(""))];
-        let choices = answerLetters.filter(
-          l => !knownPresentLetters.has(l) && !hintedLetters.has(l)
-        );
+      hintedLetters.forEach(letter => knownPresentLetters.add(letter));
 
-        // If every letter is already visible on the board, still avoid
-        // repeating an earlier hint if possible.
-        if (!choices.length) {
-          choices = answerLetters.filter(l => !hintedLetters.has(l));
-        }
+      function giveNewLetterHint() {
+        const uniqueAnswerLetters = [...new Set(answer.split(""))];
+        const choices = uniqueAnswerLetters.filter(letter => !knownPresentLetters.has(letter));
         if (!choices.length) return false;
 
         const letter = choices[Math.floor(Math.random() * choices.length)];
@@ -950,20 +1030,16 @@
       function giveYellowLocationHint() {
         const candidates = [];
 
-        evaluations.forEach(({ guess, result }) => {
-          result.forEach((state, i) => {
-            if (state !== "present") return;
+        knownYellowLetters.forEach(letter => {
+          for (let targetIndex = 0; targetIndex < wordLength; targetIndex++) {
+            if (answer[targetIndex] !== letter) continue;
 
-            const letter = guess[i];
-            for (let targetIndex = 0; targetIndex < wordLength; targetIndex++) {
-              if (answer[targetIndex] === letter) {
-                const key = `${letter}-${targetIndex}`;
-                if (!hintedLocations.has(key)) {
-                  candidates.push({ letter, targetIndex, key });
-                }
-              }
-            }
-          });
+            const key = `${letter}-${targetIndex}`;
+            if (knownGreenPositions.get(targetIndex) === letter) continue;
+            if (hintedLocations.has(key)) continue;
+
+            candidates.push({ letter, targetIndex, key });
+          }
         });
 
         if (!candidates.length) return false;
@@ -977,8 +1053,6 @@
 
       let gaveHint = false;
 
-      // First hint is always a letter with no location.
-      // Thereafter: yellow-letter location, new letter, yellow-letter location...
       if (hintCount === 0) {
         gaveHint = giveNewLetterHint();
       } else if (hintCount % 2 === 1) {
@@ -988,7 +1062,7 @@
       }
 
       if (!gaveHint) {
-        showMessage("You've uncovered everything I can hint!");
+        showMessage("You've already uncovered everything I can hint!");
         hintBtn.disabled = true;
         return;
       }
@@ -999,9 +1073,15 @@
     }
 
     function showWinCelebration() {
+      document.getElementById("winTitle").textContent = randomWinMessage();
       winWord.textContent = answer;
       winModal.classList.add("show");
       launchConfetti();
+    }
+
+    function showLossResult() {
+      lossWord.textContent = answer;
+      lossModal.classList.add("show");
     }
 
     let confettiAnimationId = null;
@@ -1137,6 +1217,7 @@
       if (btn) setGameMode(btn.dataset.mode);
     });
     document.getElementById("playAgainBtn").onclick = () => startGame();
+    document.getElementById("tryAgainBtn").onclick = () => startGame();
 
     window.addEventListener("resize", renderBoard);
 
