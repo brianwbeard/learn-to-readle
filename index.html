@@ -409,10 +409,23 @@
 
       .keyboard {
         position: sticky;
-        bottom: 0;
+        bottom: max(10px, env(safe-area-inset-bottom));
         z-index: 40;
         background: var(--bg);
-        padding-bottom: max(8px, env(safe-area-inset-bottom));
+        padding-bottom: 0;
+      }
+
+      .row.active-guess {
+        position: sticky;
+        top: 44px;
+        z-index: 44;
+        background: var(--bg);
+        padding: 4px 0;
+        border-radius: 8px;
+      }
+
+      .row.active-guess.after-latest {
+        top: 108px;
       }
     }
 
@@ -754,6 +767,10 @@
           }
         } else if (rowIndex === guesses.length && !gameOver) {
           text = currentGuess;
+          row.classList.add("active-guess");
+          if (guesses.length > 0) {
+            row.classList.add("after-latest");
+          }
         }
 
         for (let i = 0; i < wordLength; i++) {
