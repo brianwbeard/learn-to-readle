@@ -1,4 +1,4 @@
-const CACHE_NAME = "learn-to-readle-v7-1";
+const CACHE_NAME = "learn-to-readle-v7-answer-cleanup";
 const APP_SHELL = [
   "./",
   "./index.html",
