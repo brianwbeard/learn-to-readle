@@ -74,6 +74,30 @@
       touch-action: manipulation;
     }
 
+
+    .gear-btn {
+      width: 42px;
+      height: 42px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      font-weight: 700;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .settings-panel {
+      display: none;
+      gap: 14px;
+    }
+
+    .settings-panel.show {
+      display: grid;
+    }
+
     .small-btn {
       padding: 10px 12px;
       background: var(--panel);
@@ -461,10 +485,12 @@
     <header>
       <h1>Learn To Readle</h1>
       <div class="top-buttons">
+        <button class="gear-btn" id="settingsBtn" aria-label="Settings" aria-expanded="false">⚙️</button>
         <button class="small-btn" id="newGameBtn">New Word</button>
       </div>
     </header>
 
+    <div class="settings-panel" id="settingsPanel">
     <section class="controls" aria-label="Game settings">
       <strong>How many letters?</strong>
       <div class="length-buttons" id="lengthButtons"></div>
@@ -478,6 +504,7 @@
       </div>
       <div class="mode-explainer" id="modeExplainer">Guesses must be real words.</div>
     </section>
+    </div>
 
     <div id="message" aria-live="polite"></div>
 
@@ -561,6 +588,8 @@
     const confettiCanvas = document.getElementById("confettiCanvas");
     const modeButtons = document.getElementById("modeButtons");
     const modeExplainer = document.getElementById("modeExplainer");
+    const settingsBtn = document.getElementById("settingsBtn");
+    const settingsPanel = document.getElementById("settingsPanel");
 
 
     function setGameMode(mode) {
@@ -1078,6 +1107,12 @@
     document.getElementById("newGameBtn").onclick = () => startGame();
     document.getElementById("newGameBtn2").onclick = () => startGame();
     hintBtn.onclick = giveHint;
+
+    settingsBtn.onclick = () => {
+      const isOpen = settingsPanel.classList.toggle("show");
+      settingsBtn.setAttribute("aria-expanded", String(isOpen));
+    };
+
     modeButtons.addEventListener("click", (event) => {
       const btn = event.target.closest(".mode-btn");
       if (btn) setGameMode(btn.dataset.mode);
