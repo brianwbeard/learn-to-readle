@@ -113,3 +113,9 @@ VERSION 11 — PRIVACY-FIRST USAGE ANALYTICS
 - No guesses, solved-word history, progress, typed input, names, ages, or Learn To Readle user IDs are sent.
 - Added a Privacy section in Settings with the finalized privacy notice.
 - Analytics failures do not affect gameplay.
+
+
+VERSION 11.1 — ANALYTICS + PRIVACY MODAL FIXES
+- Privacy notice now scrolls vertically on small screens.
+- Privacy Close button remains accessible at the bottom of the modal.
+- app_opened now waits for Umami to load and fires at most once per app/page load.

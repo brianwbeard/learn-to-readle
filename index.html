@@ -414,6 +414,28 @@
     .parent-answer { width: 110px; max-width: 100%; padding: 9px 10px; border: 2px solid var(--border); border-radius: 9px; font-size: 20px; text-align: center; }
     .parent-error { min-height: 20px; margin-top: 7px; color: #a33; font-size: 13px; font-weight: 700; }
 
+
+    .privacy-modal {
+      max-height: min(84vh, 720px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .privacy-scroll {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-right: 4px;
+    }
+
+    .privacy-actions {
+      position: sticky;
+      bottom: 0;
+      background: white;
+      padding-top: 12px;
+      margin-top: 8px;
+    }
+
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -768,17 +790,22 @@
 
 
     <div class="modal-backdrop" id="privacyModal" role="dialog" aria-modal="true" aria-labelledby="privacyTitle">
-      <div class="result-modal info-modal">
-        <h2 id="privacyTitle">Privacy</h2>
-        <p>Learn To Readle is designed with children's privacy in mind. You don't need an account to play, and Learn To Readle does not ask players for their name, email address, age, or other personal information.</p>
-        <p>Learn To Readle uses Umami, a privacy-focused analytics service, solely to understand how the game is being used and to help operate and improve it. This includes usage information such as how often the game is used, which word lengths and game modes are selected, whether hints are used, and which features are opened.</p>
-        <p>Learn To Readle does <strong>not</strong> send your guesses, solved-word history, progress, or anything you type to Umami.</p>
-        <p>Umami does not use cookies or track people across different websites. It may process technical information such as device type, browser, operating system, approximate location, and IP address to produce usage statistics. IP addresses are not stored.</p>
-        <p>The information collected through analytics is used only to operate, understand, and improve Learn To Readle. Learn To Readle does not use analytics to identify or contact individual players, create profiles of individual players, or for advertising or marketing. Analytics data is not sold.</p>
-        <p>We limit the information Learn To Readle sends to Umami to the usage events needed for these purposes. We do not assign players an account or persistent Learn To Readle user ID, and we do not use Umami's features for identifying individual users.</p>
-        <p>Game progress is stored locally on your device and is not included in analytics.</p>
-        <div class="confirm-buttons"><button class="modal-button" id="privacyCloseBtn">CLOSE</button></div>
+      <div class="result-modal info-modal privacy-modal">
+        <div class="privacy-scroll">
+          <h2 id="privacyTitle">Privacy</h2>
+          <p>Learn To Readle is designed with children's privacy in mind. You don't need an account to play, and Learn To Readle does not ask players for their name, email address, age, or other personal information.</p>
+          <p>Learn To Readle uses Umami, a privacy-focused analytics service, solely to understand how the game is being used and to help operate and improve it. This includes usage information such as how often the game is used, which word lengths and game modes are selected, whether hints are used, and which features are opened.</p>
+          <p>Learn To Readle does <strong>not</strong> send your guesses, solved-word history, progress, or anything you type to Umami.</p>
+          <p>Umami does not use cookies or track people across different websites. It may process technical information such as device type, browser, operating system, approximate location, and IP address to produce usage statistics. IP addresses are not stored.</p>
+          <p>The information collected through analytics is used only to operate, understand, and improve Learn To Readle. Learn To Readle does not use analytics to identify or contact individual players, create profiles of individual players, or for advertising or marketing. Analytics data is not sold.</p>
+          <p>We limit the information Learn To Readle sends to Umami to the usage events needed for these purposes. We do not assign players an account or persistent Learn To Readle user ID, and we do not use Umami's features for identifying individual users.</p>
+          <p>Game progress is stored locally on your device and is not included in analytics.</p>
+        </div>
+        <div class="confirm-buttons privacy-actions">
+          <button class="modal-button" id="privacyCloseBtn">CLOSE</button>
+        </div>
       </div>
+    </div>
     </div>
 
     <div class="modal-backdrop" id="grownUpsModal" role="dialog" aria-modal="true" aria-labelledby="grownUpsTitle">
@@ -837,7 +864,7 @@
     const PROGRESS_STORAGE_KEY = "learnToReadleProgress";
     const PROGRESS_SCHEMA_VERSION = 1;
     // Paste your Venmo URL here before enabling contributions.
-    const VENMO_SUPPORT_URL = "https://venmo.com/u/brianwbeard";
+    const VENMO_SUPPORT_URL = "PASTE_YOUR_VENMO_LINK_HERE";
 
     // These are the words the game can choose as the answer.
     // Keep these familiar and kid-friendly.
@@ -1011,6 +1038,32 @@
     function resetAnalyticsGameState() {
       analyticsGameStarted = false;
       analyticsGameUsedHint = false;
+    }
+
+    let analyticsAppOpenedSent = false;
+
+    function trackAppOpenedWhenReady() {
+      if (analyticsAppOpenedSent) return;
+
+      const send = () => {
+        if (analyticsAppOpenedSent) return true;
+        if (typeof window.umami !== "undefined" && typeof window.umami.track === "function") {
+          analyticsAppOpenedSent = true;
+          window.umami.track("app_opened");
+          return true;
+        }
+        return false;
+      };
+
+      if (send()) return;
+
+      let attempts = 0;
+      const timer = setInterval(() => {
+        attempts++;
+        if (send() || attempts >= 50) {
+          clearInterval(timer);
+        }
+      }, 100);
     }
 
     function emptyProgressState() {
@@ -1773,7 +1826,7 @@
     renderProgress();
     setGameMode("easy");
     startGame();
-    trackAnalytics("app_opened");
+    trackAppOpenedWhenReady();
 
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", async () => {

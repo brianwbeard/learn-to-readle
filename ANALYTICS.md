@@ -67,3 +67,8 @@ Umami separately provides anonymous visitor and visit estimates. These should no
 - Update this file whenever an event definition changes.
 
 Last updated: August 2026
+
+
+## v11.1 implementation note
+
+`app_opened` waits for the Umami tracker to become available and is guarded so it can fire at most once per page/app load. This avoids dropping the event when the application initializes before the deferred Umami script is ready.
