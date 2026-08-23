@@ -10,6 +10,14 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icon-180.png" />
   <title>Learn To Readle</title>
+  <script
+    defer
+    src="https://cloud.umami.is/script.js"
+    data-website-id="10178998-4c72-47b7-a3d9-3cae44759a3e"
+    data-auto-track="false"
+    data-do-not-track="true"
+    data-exclude-search="true"
+    data-exclude-hash="true"></script>
   <style>
     :root {
       --bg: #f7f7f2;
@@ -693,6 +701,7 @@
     </section>
       <div class="settings-links">
         <button class="settings-link" id="aboutBtn">About Learn To Readle</button>
+        <button class="settings-link" id="privacyBtn">Privacy</button>
         <button class="settings-link" id="grownUpsBtn">For Parents &amp; Grown-Ups</button>
       </div>
     </div>
@@ -754,6 +763,21 @@
         <p>Learn To Readle is free to use and doesn't require an account.</p>
         <p class="disclaimer">Learn To Readle is an independent project and is not affiliated with Wordle or The New York Times.</p>
         <div class="confirm-buttons"><button class="modal-button" id="aboutCloseBtn">CLOSE</button></div>
+      </div>
+    </div>
+
+
+    <div class="modal-backdrop" id="privacyModal" role="dialog" aria-modal="true" aria-labelledby="privacyTitle">
+      <div class="result-modal info-modal">
+        <h2 id="privacyTitle">Privacy</h2>
+        <p>Learn To Readle is designed with children's privacy in mind. You don't need an account to play, and Learn To Readle does not ask players for their name, email address, age, or other personal information.</p>
+        <p>Learn To Readle uses Umami, a privacy-focused analytics service, solely to understand how the game is being used and to help operate and improve it. This includes usage information such as how often the game is used, which word lengths and game modes are selected, whether hints are used, and which features are opened.</p>
+        <p>Learn To Readle does <strong>not</strong> send your guesses, solved-word history, progress, or anything you type to Umami.</p>
+        <p>Umami does not use cookies or track people across different websites. It may process technical information such as device type, browser, operating system, approximate location, and IP address to produce usage statistics. IP addresses are not stored.</p>
+        <p>The information collected through analytics is used only to operate, understand, and improve Learn To Readle. Learn To Readle does not use analytics to identify or contact individual players, create profiles of individual players, or for advertising or marketing. Analytics data is not sold.</p>
+        <p>We limit the information Learn To Readle sends to Umami to the usage events needed for these purposes. We do not assign players an account or persistent Learn To Readle user ID, and we do not use Umami's features for identifying individual users.</p>
+        <p>Game progress is stored locally on your device and is not included in analytics.</p>
+        <div class="confirm-buttons"><button class="modal-button" id="privacyCloseBtn">CLOSE</button></div>
       </div>
     </div>
 
@@ -840,6 +864,9 @@
     let progressState = null;
     let parentGateAnswer = null;
     let parentGateAttempts = 0;
+    let analyticsGameStarted = false;
+    let analyticsGameUsedHint = false;
+    let analyticsPreviousGameCompleted = false;
 
     const board = document.getElementById("board");
     const keyboard = document.getElementById("keyboard");
@@ -866,6 +893,9 @@
     const aboutBtn = document.getElementById("aboutBtn");
     const aboutModal = document.getElementById("aboutModal");
     const aboutCloseBtn = document.getElementById("aboutCloseBtn");
+    const privacyBtn = document.getElementById("privacyBtn");
+    const privacyModal = document.getElementById("privacyModal");
+    const privacyCloseBtn = document.getElementById("privacyCloseBtn");
     const grownUpsBtn = document.getElementById("grownUpsBtn");
     const grownUpsModal = document.getElementById("grownUpsModal");
     const grownUpsCancelBtn = document.getElementById("grownUpsCancelBtn");
@@ -967,6 +997,21 @@
       return null;
     }
 
+
+    function trackAnalytics(eventName, properties = {}) {
+      try {
+        if (typeof window.umami !== "undefined" && typeof window.umami.track === "function") {
+          window.umami.track(eventName, properties);
+        }
+      } catch (err) {
+        console.warn("Analytics event failed:", err);
+      }
+    }
+
+    function resetAnalyticsGameState() {
+      analyticsGameStarted = false;
+      analyticsGameUsedHint = false;
+    }
 
     function emptyProgressState() {
       const state = {
@@ -1166,6 +1211,7 @@
 
     function startGame(newLength = wordLength) {
       wordLength = newLength;
+      resetAnalyticsGameState();
       answer = chooseAnswer();
       guesses = [];
       currentGuess = "";
@@ -1310,6 +1356,16 @@
         }
       }
 
+      if (!analyticsGameStarted) {
+        analyticsGameStarted = true;
+        trackAnalytics("game_started", { length: wordLength, mode: gameMode });
+
+        if (analyticsPreviousGameCompleted) {
+          trackAnalytics("new_game_after_completion", { length: wordLength, mode: gameMode });
+          analyticsPreviousGameCompleted = false;
+        }
+      }
+
       const submittedIndex = guesses.length;
       guesses.push(guess);
       updateKeyStates(guess);
@@ -1323,6 +1379,12 @@
       if (isWin || isLoss) {
         gameOver = true;
         hintBtn.disabled = true;
+        trackAnalytics("game_completed", {
+          length: wordLength,
+          mode: gameMode,
+          hints_used: analyticsGameUsedHint
+        });
+        analyticsPreviousGameCompleted = true;
       }
 
       renderBoard();
@@ -1485,6 +1547,8 @@
       hintCount++;
       hintUsedThisGuess = true;
       hintBtn.disabled = true;
+      analyticsGameUsedHint = true;
+      trackAnalytics("hint_used", { length: wordLength, mode: gameMode });
     }
 
     function showWinCelebration() {
@@ -1631,12 +1695,20 @@
       settingsPanel.classList.remove("show");
       settingsBtn.setAttribute("aria-expanded", "false");
       aboutModal.classList.add("show");
+      trackAnalytics("about_opened");
     };
     aboutCloseBtn.onclick = () => aboutModal.classList.remove("show");
+    privacyBtn.onclick = () => {
+      settingsPanel.classList.remove("show");
+      settingsBtn.setAttribute("aria-expanded", "false");
+      privacyModal.classList.add("show");
+    };
+    privacyCloseBtn.onclick = () => privacyModal.classList.remove("show");
     grownUpsBtn.onclick = () => {
       settingsPanel.classList.remove("show");
       settingsBtn.setAttribute("aria-expanded", "false");
       openParentGate();
+      trackAnalytics("grownups_opened");
     };
     grownUpsCancelBtn.onclick = () => {
       grownUpsModal.classList.remove("show");
@@ -1660,6 +1732,7 @@
       resetAllProgress();
       resetModal.classList.remove("show");
       showMessage("Progress reset.");
+      trackAnalytics("reset_progress");
     };
 
     settingsBtn.onclick = () => {
@@ -1670,6 +1743,7 @@
 
       settingsPanel.classList.toggle("show", willOpen);
       settingsBtn.setAttribute("aria-expanded", String(willOpen));
+      if (willOpen) trackAnalytics("settings_opened");
     };
 
     progressBtn.onclick = () => {
@@ -1678,7 +1752,10 @@
       settingsPanel.classList.remove("show");
       settingsBtn.setAttribute("aria-expanded", "false");
 
-      if (willOpen) renderProgress();
+      if (willOpen) {
+        renderProgress();
+        trackAnalytics("progress_opened");
+      }
       progressPanel.classList.toggle("show", willOpen);
       progressBtn.setAttribute("aria-expanded", String(willOpen));
     };
@@ -1696,6 +1773,7 @@
     renderProgress();
     setGameMode("easy");
     startGame();
+    trackAnalytics("app_opened");
 
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", async () => {

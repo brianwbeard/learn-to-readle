@@ -79,3 +79,37 @@ VERSION 7 — GAMEPLAY POLISH
   “Better luck next time! The word was [WORD].”
 - Win popup headings now vary randomly between several celebratory messages.
 - Input is locked during tile-flip animation.
+
+
+VERSION 8 — PLAYER PROGRESS + ANSWER ROTATION
+- Added an anonymous on-device progress tracker using browser localStorage.
+- Tracks unique solved words separately for each word length.
+- Shows progress as solved / current secret-answer count for 3–8 letters plus an overall total.
+- Does not track win percentage, streaks, losses, or average guesses.
+- Added a chart button beside Settings; chart and Settings panels are mutually exclusive.
+- Tracks a separate seen-word history for each word length.
+- A secret answer will not repeat within a word-length cycle.
+- The seen cycle resets only after every CURRENT secret answer of that length has been presented.
+- Solved history never resets.
+- On startup, saved seen/solved lists are reconciled against the current answers.js:
+  removed answers are pruned automatically and newly added answers become eligible automatically.
+- Storage uses an internal schema version so future migrations can preserve player progress.
+
+
+VERSION 9 — GAMEPLAY SAFEGUARDS + PROGRESS CONTROLS
+- Repeated guesses are rejected without consuming a turn.
+- Repeated-guess feedback: “You already guessed that word.”
+- Added RESET to the Progress panel.
+- RESET requires explicit YES/NO confirmation.
+- Confirming RESET clears both local Solved and Seen histories.
+- Resetting progress does not change the answer bank or game settings.
+- No hint-logic changes in this release; the possible hint edge case remains an investigation item.
+
+
+VERSION 11 — PRIVACY-FIRST USAGE ANALYTICS
+- Added Umami Cloud analytics with automatic tracking disabled.
+- Browser Do Not Track is respected.
+- Added only the approved custom usage events documented in ANALYTICS.md.
+- No guesses, solved-word history, progress, typed input, names, ages, or Learn To Readle user IDs are sent.
+- Added a Privacy section in Settings with the finalized privacy notice.
+- Analytics failures do not affect gameplay.
