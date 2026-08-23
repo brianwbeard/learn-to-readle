@@ -1,7 +1,8 @@
-const CACHE_NAME = "learn-to-readle-v2";
+const CACHE_NAME = "learn-to-readle-v3";
 const APP_SHELL = [
   "./",
   "./index.html",
+  "./answers.js",
   "./dictionary.js",
   "./manifest.webmanifest",
   "./icon-180.png",

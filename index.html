@@ -507,6 +507,7 @@
 
   </main>
 
+  <script src="answers.js"></script>
   <script src="dictionary.js"></script>
   <script>
     /*
@@ -520,9 +521,9 @@
       3. Change DEFAULT_LENGTH or MAX_GUESSES below.
     */
 
-    if (!window.VALID_WORDS) {
-      document.body.innerHTML = "<p style='font-family:sans-serif;padding:20px'>Dictionary failed to load.</p>";
-      throw new Error("dictionary.js did not load");
+    if (!window.VALID_WORDS || !window.ANSWER_WORDS) {
+      document.body.innerHTML = "<p style='font-family:sans-serif;padding:20px'>Word data failed to load.</p>";
+      throw new Error("answers.js or dictionary.js did not load");
     }
 
     const DEFAULT_LENGTH = 5;
@@ -530,41 +531,8 @@
 
     // These are the words the game can choose as the answer.
     // Keep these familiar and kid-friendly.
-    const ANSWER_WORDS = {
-      3: [
-        "ant","ape","arm","bag","bat","bed","bee","box","boy","bus","can","cap","car","cat","cow",
-        "cup","day","dog","ear","egg","eye","fan","fox","fun","hat","hen","hip","hot","jam","jar",
-        "key","leg","map","mop","mud","net","owl","pan","pen","pet","pig","pie","red","run","sea",
-        "sky","sun","toy","van","web","wet","wig","yes","zip"
-      ],
-      4: [
-        "baby","ball","bear","bird","blue","boat","book","cake","camp","card","coat","corn","crab",
-        "dark","deer","desk","door","duck","farm","fish","flag","frog","game","goat","gold","hand",
-        "home","jump","king","kite","lamp","leaf","lion","milk","moon","nest","park","pear","pink",
-        "play","rain","ring","road","rock","shoe","snow","sock","star","swim","tree","truck","wall",
-        "wind","wing","wolf","worm"
-      ],
-      5: [
-        "apple","beach","bread","brown","brush","chair","cheese","cloud","dance","dream","drink",
-        "earth","flame","grape","grass","green","happy","heart","horse","house","juice","kitty",
-        "light","mouse","music","ocean","panda","party","peach","pizza","plant","queen","river",
-        "robot","sheep","shirt","smile","snake","spoon","storm","tiger","toast","train","water",
-        "whale","white","world","zebra"
-      ],
-      6: [
-        "animal","banana","basket","button","candle","castle","circle","cookie","dragon","flower",
-        "friend","garden","guitar","kitten","monkey","orange","pencil","planet","rabbit","rocket",
-        "school","silver","soccer","spider","summer","turtle","window","winter","yellow"
-      ],
-      7: [
-        "airship","balloon","blanket","chicken","cupcake","dolphin","firefly","football","giraffe",
-        "monster","pancake","penguin","rainbow","sandbox","teacher","tractor","unicorn"
-      ],
-      8: [
-        "airplane","baseball","birthday","bluebird","dinosaur","elephant","firework","football",
-        "sandwich","snowball","sunshine","treasure"
-      ]
-    };
+    const ANSWER_WORDS = window.ANSWER_WORDS;
+
 
     // Any words here are accepted as guesses but will NOT be selected as answers.
     // This first draft intentionally keeps validation relaxed for kids:
