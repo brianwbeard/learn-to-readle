@@ -126,3 +126,9 @@ VERSION 11.2 — ANALYTICS WORD-LENGTH SCHEMA
 - This replaces the numeric `length` property on game_started, game_completed,
   new_game_after_completion, and hint_used.
 - Existing historical Umami events are unchanged; new events use the corrected schema.
+
+
+VERSION 11.3 — VENMO HANDOFF FIX
+- Restored the configured Venmo support URL in the packaged source.
+- After the grown-up math gate is passed, Venmo now opens as an external destination
+  instead of replacing the installed PWA page.
