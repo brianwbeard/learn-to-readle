@@ -119,3 +119,10 @@ VERSION 11.1 — ANALYTICS + PRIVACY MODAL FIXES
 - Privacy notice now scrolls vertically on small screens.
 - Privacy Close button remains accessible at the bottom of the modal.
 - app_opened now waits for Umami to load and fires at most once per app/page load.
+
+
+VERSION 11.2 — ANALYTICS WORD-LENGTH SCHEMA
+- Analytics now sends `word_length` as a categorical string such as `5-letter`.
+- This replaces the numeric `length` property on game_started, game_completed,
+  new_game_after_completion, and hint_used.
+- Existing historical Umami events are unchanged; new events use the corrected schema.

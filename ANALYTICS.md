@@ -16,24 +16,24 @@ Fires once when Learn To Readle loads. This does not mean the visitor played a g
 ### `game_started`
 Fires when the player submits the first valid guess of a game. It does not fire when the app merely generates a game, an invalid word is entered, or a repeated guess is entered.
 
-Properties: `length` (3–8), `mode` (`easy` or `hard`).
+Properties: `word_length` (`3-letter` through `8-letter`), `mode` (`easy` or `hard`).
 
 ### `game_completed`
 Fires when the answer is successfully guessed or the final available guess is used.
 
-Properties: `length`, `mode`, `hints_used` (`true`/`false`).
+Properties: `word_length` (`3-letter` through `8-letter`), `mode`, `hints_used` (`true`/`false`).
 
 Win/loss information is deliberately not collected.
 
 ### `new_game_after_completion`
 Fires when the player submits the first valid guess of a new game after completing the previous game. It does not fire merely because New Word is tapped.
 
-Properties: `length`, `mode`.
+Properties: `word_length` (`3-letter` through `8-letter`), `mode`.
 
 ### `hint_used`
 Fires only when the game successfully provides a useful hint.
 
-Properties: `length`, `mode`.
+Properties: `word_length` (`3-letter` through `8-letter`), `mode`.
 
 ### `settings_opened`
 Fires when the Settings panel is opened.
@@ -72,3 +72,8 @@ Last updated: August 2026
 ## v11.1 implementation note
 
 `app_opened` waits for the Umami tracker to become available and is guarded so it can fire at most once per page/app load. This avoids dropping the event when the application initializes before the deferred Umami script is ready.
+
+
+## v11.2 analytics schema note
+
+`word_length` is sent as a categorical string (`3-letter` through `8-letter`) rather than as a number. This prevents Umami from treating word length as a numeric measure and showing meaningless sums or averages.

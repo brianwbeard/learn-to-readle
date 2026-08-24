@@ -1411,10 +1411,10 @@
 
       if (!analyticsGameStarted) {
         analyticsGameStarted = true;
-        trackAnalytics("game_started", { length: wordLength, mode: gameMode });
+        trackAnalytics("game_started", { word_length: `${wordLength}-letter`, mode: gameMode });
 
         if (analyticsPreviousGameCompleted) {
-          trackAnalytics("new_game_after_completion", { length: wordLength, mode: gameMode });
+          trackAnalytics("new_game_after_completion", { word_length: `${wordLength}-letter`, mode: gameMode });
           analyticsPreviousGameCompleted = false;
         }
       }
@@ -1433,7 +1433,7 @@
         gameOver = true;
         hintBtn.disabled = true;
         trackAnalytics("game_completed", {
-          length: wordLength,
+          word_length: `${wordLength}-letter`,
           mode: gameMode,
           hints_used: analyticsGameUsedHint
         });
@@ -1601,7 +1601,7 @@
       hintUsedThisGuess = true;
       hintBtn.disabled = true;
       analyticsGameUsedHint = true;
-      trackAnalytics("hint_used", { length: wordLength, mode: gameMode });
+      trackAnalytics("hint_used", { word_length: `${wordLength}-letter`, mode: gameMode });
     }
 
     function showWinCelebration() {
