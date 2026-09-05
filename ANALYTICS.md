@@ -1,12 +1,23 @@
 # Learn To Readle — Analytics Specification
 
 ## Purpose
-Learn To Readle uses privacy-focused analytics solely to understand how the game is being used and to help operate and improve it. Analytics are provided by Umami.
+Learn To Readle uses privacy-focused analytics solely to understand how the game is being used and to help operate and improve it. Analytics are provided by Umami through the shared “Brian’s Word Games” website/property.
 
 ## Privacy Principles
 Learn To Readle does not send analytics containing player guesses, solved-word history, player progress, anything typed by the player, names, email addresses, ages, or a Learn To Readle user ID.
 
 Analytics are not used for advertising, marketing, contacting individual players, or creating individual player profiles. Browser Do Not Track is respected.
+
+
+## Shared game property
+
+Every Learn To Readle custom event includes:
+
+- `game`: `learn-to-readle`
+
+Learn To Readle and Snowman share the same Umami website/property (“Brian’s Word Games”). The `game` property is used to filter and separate each game's aggregate analytics.
+
+Because the games share one Umami property, Umami's anonymous visitor/session statistics may include activity across both games. Learn To Readle does not use Umami Distinct IDs or assign a persistent Learn To Readle analytics user ID.
 
 ## Event Definitions
 
@@ -14,7 +25,7 @@ Analytics are not used for advertising, marketing, contacting individual players
 Fires once when Learn To Readle loads. This does not mean the visitor played a game.
 
 ### `game_started`
-Fires when the player submits the first valid guess of a game. It does not fire when the app merely generates a game, an invalid word is entered, or a repeated guess is entered.
+Fires exactly once per round, when the player submits the first valid guess. It does not fire when the app merely generates/displays a new answer, when an invalid word is entered, or when a repeated guess is entered.
 
 Properties: `word_length` (`3-letter` through `8-letter`), `mode` (`easy` or `hard`).
 
@@ -77,3 +88,13 @@ Last updated: August 2026
 ## v11.2 analytics schema note
 
 `word_length` is sent as a categorical string (`3-letter` through `8-letter`) rather than as a number. This prevents Umami from treating word length as a numeric measure and showing meaningless sums or averages.
+
+
+## v11.4 shared analytics architecture
+
+- Learn To Readle and Snowman use the same Umami website/property: **Brian’s Word Games**.
+- Every Learn To Readle custom event includes `game: learn-to-readle`.
+- Filter Learn To Readle reports and funnels with **Game is `learn-to-readle`**.
+- The comparable LTR funnel is:
+  `app_opened` → `game_started` → `game_completed` → `game_started`
+- `game_started` means the first valid guess of a round.

@@ -132,3 +132,12 @@ VERSION 11.3 — VENMO HANDOFF FIX
 - Restored the configured Venmo support URL in the packaged source.
 - After the grown-up math gate is passed, Venmo now opens as an external destination
   instead of replacing the installed PWA page.
+
+
+VERSION 11.4 — SHARED WORD-GAME ANALYTICS + ANSWER CLEANUP
+- Learn To Readle now adds `game: learn-to-readle` to every custom Umami event.
+- LTR and Snowman share the “Brian’s Word Games” Umami website/property and can be separated with the `game` filter.
+- Confirmed `game_started` fires exactly once per round on the first valid guess; generating/displaying a new word does not fire it.
+- Removed DIED from answers.js. This file remains the shared source of truth for LTR and Snowman secret-answer selection.
+- Updated the Privacy notice to explain the shared analytics property while preserving the existing privacy-first approach.
+- Updated ANALYTICS.md with the shared-property architecture and comparable funnel definition.

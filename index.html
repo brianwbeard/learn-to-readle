@@ -796,9 +796,9 @@
           <p>Learn To Readle is designed with children's privacy in mind. You don't need an account to play, and Learn To Readle does not ask players for their name, email address, age, or other personal information.</p>
           <p>Learn To Readle uses Umami, a privacy-focused analytics service, solely to understand how the game is being used and to help operate and improve it. This includes usage information such as how often the game is used, which word lengths and game modes are selected, whether hints are used, and which features are opened.</p>
           <p>Learn To Readle does <strong>not</strong> send your guesses, solved-word history, progress, or anything you type to Umami.</p>
-          <p>Umami does not use cookies or track people across different websites. It may process technical information such as device type, browser, operating system, approximate location, and IP address to produce usage statistics. IP addresses are not stored.</p>
+          <p>Umami does not use cookies or advertising trackers. Learn To Readle and other Brian's Word Games use the same Umami analytics property, and each analytics event includes a game label so aggregate usage can be separated by game. Because the games share this analytics property, anonymous usage across those games may appear within the same Umami visitor or session statistics.</p><p>Umami may process technical information such as device type, browser, operating system, approximate location, and IP address to produce usage statistics. IP addresses are not stored.</p>
           <p>The information collected through analytics is used only to operate, understand, and improve Learn To Readle. Learn To Readle does not use analytics to identify or contact individual players, create profiles of individual players, or for advertising or marketing. Analytics data is not sold.</p>
-          <p>We limit the information Learn To Readle sends to Umami to the usage events needed for these purposes. We do not assign players an account or persistent Learn To Readle user ID, and we do not use Umami's features for identifying individual users.</p>
+          <p>We limit the information Learn To Readle sends to Umami to the usage events needed for these purposes, including a game label identifying Learn To Readle. We do not assign players an account or persistent Learn To Readle user ID, and we do not use Umami's features for identifying individual users.</p>
           <p>Game progress is stored locally on your device and is not included in analytics.</p>
         </div>
         <div class="confirm-buttons privacy-actions">
@@ -863,6 +863,7 @@
     const MAX_GUESSES = 8;
     const PROGRESS_STORAGE_KEY = "learnToReadleProgress";
     const PROGRESS_SCHEMA_VERSION = 1;
+    const ANALYTICS_GAME = "learn-to-readle";
     // Paste your Venmo URL here before enabling contributions.
     const VENMO_SUPPORT_URL = "https://venmo.com/u/brianwbeard";
 
@@ -1028,7 +1029,10 @@
     function trackAnalytics(eventName, properties = {}) {
       try {
         if (typeof window.umami !== "undefined" && typeof window.umami.track === "function") {
-          window.umami.track(eventName, properties);
+          window.umami.track(eventName, {
+            ...properties,
+            game: ANALYTICS_GAME
+          });
         }
       } catch (err) {
         console.warn("Analytics event failed:", err);
@@ -1049,7 +1053,7 @@
         if (analyticsAppOpenedSent) return true;
         if (typeof window.umami !== "undefined" && typeof window.umami.track === "function") {
           analyticsAppOpenedSent = true;
-          window.umami.track("app_opened");
+          trackAnalytics("app_opened");
           return true;
         }
         return false;
